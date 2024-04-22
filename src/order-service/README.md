@@ -50,7 +50,34 @@ az servicebus namespace create --name <namespace-name> --resource-group <resourc
 az servicebus queue create --name orders --namespace-name <namespace-name> --resource-group <resource-group-name>
 ```
 
-Once you have created the Service Bus namespace and queue, you will need to create a shared access policy with the **Send** permission for the queue.
+Once you have created the Service Bus namespace and queue, you will need to decide on the authentication method. You can create a shared access policy with the **Send** permission for the queue or use Microsoft Entra Workload Identity for a passwordless experience (this is the recommended approach).
+
+If you choose to use Managed Identity, you will need to assign the `Azure Service Bus Data Sender` role to the identity that is running the app, which in this case will be your account. You can do this using the Azure CLI.
+
+```bash
+PRINCIPALID=$(az ad signed-in-user show --query objectId -o tsv)
+SERVICEBUSBID=$(az servicebus namespace show --name <namespace-name> --resource-group <resource-group-name> --query id -o tsv)
+
+az role assignment create --role "Azure Service Bus Data Sender" --assignee $PRINCIPALID --scope $SERVICEBUSBID
+```
+
+Next, get the connection information for the Azure Service Bus queue and save the values to environment variables.
+
+```bash
+cat << EOF > .env
+ORDER_QUEUE_HOSTNAME=$HOSTNAME
+ORDER_QUEUE_PORT=5671
+ORDER_QUEUE_AZUREAD_AUTH=true
+ORDER_QUEUE_TRANSPORT=tls
+ORDER_QUEUE_RECONNECT_LIMIT=10
+ORDER_QUEUE_NAME=orders
+EOF
+
+# load the environment variables
+source .env
+```
+
+If you choose to use a shared access policy, you can create one using the Azure CLI.
 
 ```bash
 az servicebus queue authorization-rule create --name sender --namespace-name <namespace-name> --resource-group <resource-group-name> --queue-name orders --rights Send
@@ -69,7 +96,6 @@ Finally, save the environment variables to a `.env` file.
 ```bash
 cat << EOF > .env
 ORDER_QUEUE_HOSTNAME=$HOSTNAME
-ORDER_QUEUE_HOST=$HOSTNAME
 ORDER_QUEUE_PORT=5671
 ORDER_QUEUE_USERNAME=sender
 ORDER_QUEUE_PASSWORD="$PASSWORD"
