@@ -1,0 +1,3 @@
+This is the wizexercise.txt file that is specified in the instructions for this exercise.
+it has some content in it. isn't that lovely?
+yes... yes it is. 
