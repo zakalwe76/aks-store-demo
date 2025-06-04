@@ -1,53 +1,3 @@
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: mongodb
-spec:
-  serviceName: mongodb
-  replicas: 1
-  selector:
-    matchLabels:
-      app: mongodb
-  template:
-    metadata:
-      labels:
-        app: mongodb
-    spec:
-      nodeSelector:
-        "kubernetes.io/os": linux
-      containers:
-      - name: mongodb
-        image: mcr.microsoft.com/mirror/docker/library/mongo:4.2
-        ports:
-        - containerPort: 27017
-          name: mongodb
-        resources:
-          requests:
-            cpu: 5m
-            memory: 75Mi
-          limits:
-            cpu: 25m
-            memory: 1024Mi
-        livenessProbe:
-          exec:
-            command:
-            - mongosh
-            - --eval
-            - db.runCommand('ping').ok
-          initialDelaySeconds: 5
-          periodSeconds: 5
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: mongodb
-spec:
-  ports:
-  - port: 27017
-  selector:
-    app: mongodb
-  type: ClusterIP    
----
 apiVersion: v1
 data:
   rabbitmq_enabled_plugins: |
@@ -139,7 +89,7 @@ spec:
         "kubernetes.io/os": linux
       containers:
       - name: order-service
-        image: ghcr.io/azure-samples/aks-store-demo/order-service:latest
+        image: dingo1227.azurecr.io/aks-store-demo/order-service:latest
         ports:
         - containerPort: 3000
         env:
@@ -226,7 +176,7 @@ spec:
         "kubernetes.io/os": linux
       containers:
       - name: makeline-service
-        image: ghcr.io/azure-samples/aks-store-demo/makeline-service:latest
+        image: dingo1227.azurecr.io/aks-store-demo/makeline-service:latest
         ports:
         - containerPort: 3001
         env:
@@ -239,7 +189,7 @@ spec:
         - name: ORDER_QUEUE_NAME
           value: "orders"
         - name: ORDER_DB_URI
-          value: "mongodb://mongodb:27017"
+          value: "mongodb://myUserAdmin:mangomongo@mongodb:27017"
         - name: ORDER_DB_NAME
           value: "orderdb"
         - name: ORDER_DB_COLLECTION_NAME
@@ -303,7 +253,7 @@ spec:
         "kubernetes.io/os": linux
       containers:
       - name: product-service
-        image: ghcr.io/azure-samples/aks-store-demo/product-service:latest
+        image: dingo1227.azurecr.io/aks-store-demo/product-service:latest
         ports:
         - containerPort: 3002
         env: 
@@ -362,7 +312,7 @@ spec:
         "kubernetes.io/os": linux
       containers:
       - name: store-front
-        image: ghcr.io/azure-samples/aks-store-demo/store-front:latest
+        image: dingo1227.azurecr.io/aks-store-demo/store-front:latest
         ports:
         - containerPort: 8080
           name: store-front
@@ -430,7 +380,7 @@ spec:
         "kubernetes.io/os": linux
       containers:
       - name: store-admin
-        image: ghcr.io/azure-samples/aks-store-demo/store-admin:latest
+        image: dingo1227.azurecr.io/aks-store-demo/store-admin:latest
         ports:
         - containerPort: 8081
           name: store-admin
@@ -498,7 +448,7 @@ spec:
         "kubernetes.io/os": linux
       containers:
       - name: virtual-customer
-        image: ghcr.io/azure-samples/aks-store-demo/virtual-customer:latest
+        image: dingo1227.azurecr.io/aks-store-demo/virtual-customer:latest
         env:
         - name: ORDER_SERVICE_URL
           value: http://order-service:3000/
@@ -509,8 +459,8 @@ spec:
             cpu: 1m
             memory: 1Mi
           limits:
-            cpu: 2m
-            memory: 20Mi
+            cpu: 1m
+            memory: 7Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -530,7 +480,7 @@ spec:
         "kubernetes.io/os": linux
       containers:
       - name: virtual-worker
-        image: ghcr.io/azure-samples/aks-store-demo/virtual-worker:latest
+        image: dingo1227.azurecr.io/aks-store-demo/virtual-worker:latest
         env:
         - name: MAKELINE_SERVICE_URL
           value: http://makeline-service:3001
@@ -541,5 +491,5 @@ spec:
             cpu: 1m
             memory: 1Mi
           limits:
-            cpu: 2m
-            memory: 20Mi
+            cpu: 1m
+            memory: 7Mi
